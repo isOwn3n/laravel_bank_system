@@ -18,12 +18,16 @@ abstract class Controller
         return $keys;
     }
 
-    // TODO: Add everything else need here.
     public function write_in_redis(int $card_number, int $user_id, int $amount): void
     {
-        Redis::setex('test_key', 600, 'test_value');
-        Redis::setex("transaction:{$user_id}:{$card_number}", 600, json_encode([
+        $current_time = time();
+        Redis::setex("transaction:{$user_id}:{$card_number}:{$current_time}", 600, json_encode([
             'amount' => $amount
         ]));
+    }
+
+    public function get_from_redis(string $key)
+    {
+        return Redis::get($key);
     }
 }
