@@ -20,12 +20,14 @@ class AccountRepository implements AccountRepositoryInterface
      * @param int $amount
      * @param int $card_number
      * @param int $user_id
+     * @param bool $is_deposit
+     * @param int $fee
      * @return array
      */
-    public function update_balance(int $amount, int $card_number, int $user_id, bool $is_deposit = true): array
+    public function update_balance(int $amount, int $card_number, int $user_id, bool $is_deposit = true, int $fee = 0): array
     {
-        $data = ['balance' => 0, 'id' => 0, 'status' => 200, 'message' => 'the balance changed successfuly.'];
-        DB::transaction(function () use ($card_number, $amount, $is_deposit, &$data) {
+        $data = ['balance' => 0, 'id' => 0, 'status' => 200, 'message' => 'the balance changed successfuly.', 'fee' => $fee];
+        DB::transaction(function () use ($card_number, $amount, $is_deposit, $fee, &$data) {
             $account = $this->model->where('card_number', $card_number)->lockForUpdate()->first();
 
             if (!$account) {
@@ -34,7 +36,11 @@ class AccountRepository implements AccountRepositoryInterface
                 return;
             }
 
-            if ($account->balance < $amount) {
+            $final_amount = $amount;
+            if (!$is_deposit)
+                $final_amount += $fee;
+
+            if ($account->balance < $final_amount) {
                 $data['balance'] = $account->balance;
                 $data['status'] = 418;
                 $data['message'] = 'There is no enough money.';
@@ -42,11 +48,11 @@ class AccountRepository implements AccountRepositoryInterface
             }
 
             $account_id = $account->id;
-            $is_deposit ? $account->balance += $amount : $account->balance -= $amount;
+            $is_deposit ? $account->balance += $amount : $account->balance -= $final_amount;
             $account->save();
 
             $data['balance'] = $account->balance;
-            $data['id'] = $account->id;
+            $data['id'] = $account_id;
         });
         return $data;
     }
