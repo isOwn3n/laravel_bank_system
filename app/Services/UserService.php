@@ -13,8 +13,8 @@ class UserService
         public UserRepository $repository
     ) {}
 
-    public function update_balance(int $amount, int $user_id, bool $is_deposit): array
+    public function update_balance(int $amount, int $user_id, bool $is_deposit, int $fee = 0): array
     {
-        return $this->repository->update_balance($amount, $user_id, $is_deposit);
+        return $this->repository->update_balance($amount, $user_id, $is_deposit, $fee);
     }
 }
