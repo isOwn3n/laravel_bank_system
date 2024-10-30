@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -33,5 +32,6 @@ class DatabaseSeeder extends Seeder
             'card_id' => fn() => Account::inRandomOrder()->first()->id,
         ]);
         $this->call(UserBalanceSeeder::class);
+        $this->call(UserTransactionSeeder::class);
     }
 }
