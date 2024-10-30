@@ -13,8 +13,7 @@ return new class extends Migration {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('card_id')->constrained('accounts');
-            // TODO: Check with this has any changes on speed of queries.
-            $table->foreignId('user_id')->nullable()->constrained('users');
+            $table->foreignId('user_id')->constrained('users');
             $table->integer('amount', unsigned: true);
             $table->integer('fee', unsigned: true);
             $table->boolean('is_deposit');
