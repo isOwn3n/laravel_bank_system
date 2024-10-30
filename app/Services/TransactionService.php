@@ -3,9 +3,7 @@
 namespace App\Services;
 
 use App\Models\Transaction;
-use App\Repositories\AccountRepository;
 use App\Repositories\TransactionRepository;
-use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 
@@ -19,7 +17,7 @@ class TransactionService
 {
     public function __construct(
         public TransactionRepository $reposotiry,
-        public UserRepository $userRepository,
+        public UserService $userService,
         public AccountService $accountService,
     ) {}
 
@@ -30,11 +28,6 @@ class TransactionService
         $transactions = Transaction::where('user_id', $user_id)->whereDate('updated_at', $today)->get();
         $balance = $transactions->sum('amount');
         return response()->json(['balance' => $balance], 200);
-    }
-
-    public function isCardLimited(int $card_number, int $amount): bool
-    {
-        return true;
     }
 
     public function getCash(int $user_id, int $card_number, int $amount): JsonResponse
@@ -54,10 +47,8 @@ class TransactionService
             return response()->json(['message' => 'Today you cant do any transactions.', 'allowed_amount' => $allowed_amount], 403);
         }
 
-        $amount += $fee;
-
-        // TODO: Dont check user anymore
-        $user = $this->userRepository->update_balance($amount, $user_id, false);
+        // TODO: update user balance and put all total of all it cards (not important).
+        $user = $this->userService->update_balance($amount, $user_id, false, $fee);
         switch ($user['status']) {
             case 404:
                 return response()->json([
@@ -75,7 +66,7 @@ class TransactionService
                 break;
         }
 
-        $account = $this->accountService->update_balance($amount, $card_number, $user_id, false);
+        $account = $this->accountService->update_balance($amount, $card_number, $user_id, false, $fee);
         switch ($account['status']) {
             case 404:
                 return response()->json([
@@ -101,5 +92,11 @@ class TransactionService
         $account_id = $account['id'];
         $result = $this->reposotiry->getCash($account['balance'], $account['id'], $amount, $fee);
         return response()->json([$result], 200);
+    }
+
+    public function get_top_users(array $user_ids)
+    {
+        $transactions = $this->reposotiry->get_last_ten_rows($user_ids);
+        return $transactions;
     }
 }
