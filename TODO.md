@@ -1,11 +1,11 @@
-- [x] Rate Limit, Each user can do 2 transactions per 5 seconds.
-- [x] Each Phone Number is able to have many accounts. (Just one phone number.)
-- [ ] Add a limit to project, everyday each account (card) is able to make 50M (the total amount) transactions. (Handle it using Cache System.)
-- [x] Write an API to get cash. (on this transaction system have to create a new row in transactions table then the card and user balance decrease.)
-- [ ] Write an API to return total balance and balance of each account (card).
-- [ ] Write an API to return top 3 users they had most transactions. (store all transactions in redis, and get the last transactions from there, then write a worker to clear cache, that are passed 10 minutes).
-- [ ] For all endpoints write custom request.
+-   [x] Rate Limit, Each user can do 2 transactions per 5 seconds.
+-   [x] Each Phone Number is able to have many accounts. (Just one phone number.)
+-   [ ] Add a limit to project, everyday each account (card) is able to make 50M (the total amount) transactions. (Write middleware for it.) (Store total amount of transactions of each card in redis and set expire time to 12 A.M.)
+-   [x] Write an API to get cash. (on this transaction system have to create a new row in transactions table then the card and user balance decrease.)
+-   [ ] Write an API to return total balance and balance of each account (card).
+-   [x] Write an API to return top 3 users they had most transactions. (store all transactions and it amount in redis using setex then when api called get total amount of each user and select the 3 tops, set 10 minutes as expire time.)
+-   [ ] Write an API to transfer money between two accounts.
+-   [ ] For all endpoints write custom request.
 
-
-- [ ] Customize README File.
-
+-   [ ] Customize README File.
+-   [ ] Make all variable and function names camel case.
