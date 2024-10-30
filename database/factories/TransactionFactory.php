@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Account;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,6 +21,7 @@ class TransactionFactory extends Factory
         $statuses = ['pending', 'confirmed', 'cancelled'];
         return [
             'card_id' => Account::factory(),
+            'user_id' => User::factory(),
             'amount' => fake()->randomNumber(),
             'is_deposit' => fake()->boolean(2),
             'fee' => 500,
