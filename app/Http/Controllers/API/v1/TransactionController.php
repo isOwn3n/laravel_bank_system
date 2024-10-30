@@ -3,84 +3,64 @@
 namespace App\Http\Controllers\API\v1;
 
 use App\Http\Controllers\Controller;
-use App\Interfaces\Repositories\TransactionRepositoryInterface;
-use App\Models\Account;
+use App\Http\Requests\CashRequest;
 use App\Services\TransactionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Validator;
 
 class TransactionController extends Controller
 {
     protected TransactionService $service;
-    protected TransactionRepositoryInterface $repository;
 
-    public function __construct(TransactionService $service, TransactionRepositoryInterface $repository)
+    public function __construct(TransactionService $service)
     {
         $this->service = $service;
-        /* Move the repository to service. */
-        $this->repository = $repository;
+    }
+
+    public function testRedis()
+    {
+        return response()->json($this->read_from_redis_by_user_id(1));
     }
 
     /**
-     * Display a listing of the resource.
+     * A controller to get cash (API).
+     * @param CashRequest $request A Custom Request Class.
+     * @return JsonResponse
      */
-    public function index()
+    public function cash(CashRequest $request): JsonResponse
     {
-        return $this->service->getTotalTransactionsPerDay(1);
+        $validated = $request->validated();
+
+        $user_id = $request->user()->id;
+        $result = $this->service->getCash($user_id, $validated['card_number'], $validated['amount']);
+
+        $this->write_in_redis($validated['card_number'], $user_id, $validated['amount']);
+
+        return $result;
     }
 
-    /* TODO: Write The Custom Request. */
-    public function cash(Request $request)
+    public function get_three_last_users(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'card_number' => 'required|integer|exists:accounts,card_number',
-            'amount' => 'required|integer'
-        ]);
-        if ($validator->fails())
-            return response()->json([
-                'message' => 'Error: ' . $validator->errors()
-            ], 422);
-
-        $validated_data = $validator->validated();
-        return response()->json($this->repository->getCash(1, $validated_data['card_number'], $validated_data['amount']));
-        /* $balance = Account::where('card_number', $validated_data['card_number'])->where('user_id', $request->user()->id); */
-        /* if ($balance < $validated_data['amount']) */
-        /* return response()->json(['message' => 'Not Enough Money!'], Response::HTTP_I_AM_A_TEAPOT); */
+        $cache_transaction = $this->read_all_from_redis();
+        $user_ids = [];
+        foreach ($cache_transaction as $index => $value) {
+            $parts = explode(':', $value);
+            array_push($user_ids, (int) $parts[1]);
+        }
+        return response()->json($user_ids);
     }
 
     /**
      * Store a newly created resource in storage.
+     * @param Request $request
      */
-    public function get_count_per_hour(Request $request)
+
+    // TODO: Remove it and write a query (One with SQL and the other one with ORM)
+    public function get_count_per_hour(Request $request): JsonResponse
     {
         $transactions_count = $this->repository->successfulTrasactionsPerHourCount(1, 3198572955);
         return response()->json(
             ['count' => $transactions_count, 'message' => 'Count of successful transactions at last hour'],
         );
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }
