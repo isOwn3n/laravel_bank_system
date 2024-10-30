@@ -37,7 +37,7 @@ class TransactionRepository implements TransactionRepositoryInterface
     }
 
     /**
-     * This is a function to get Cash and
+     * This is a function to get Cash.
      * @param int $user_id
      * @param int $card_number
      * @param int $amount
@@ -61,11 +61,29 @@ class TransactionRepository implements TransactionRepositoryInterface
         ];
     }
 
-    // TODO: Change name of this function.
-    public function get_most_payed_users(int $user_id)
-    {
-        return;
-    }
+    // TOOD: Change name of this function.
 
-    /* public function */
+    /**
+     * This is a function that returns user info and they 10 last transactions.
+     * @param array $ids
+     * @return array
+     */
+    public function get_last_ten_rows(array $ids): array
+    {
+        $transactions_by_user = [];
+
+        foreach ($ids as $user_id => $amount) {
+            $transaction = $this
+                ->model
+                ->where('user_id', $user_id)
+                ->orderBy('created_at', 'desc')
+                ->take(10)
+                ->get();
+
+            $transactions_by_user[$user_id]['info'] = $transaction->first()->user;
+            $transactions_by_user[$user_id]['transactions'] = $transaction;
+        }
+
+        return $transactions_by_user;
+    }
 }
