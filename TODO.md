@@ -3,6 +3,7 @@
 - [ ] Add a limit to project, everyday each account (card) is able to make 50M (the total amount) transactions. (Handle it using Cache System.)
 - [x] Write an API to get cash. (on this transaction system have to create a new row in transactions table then the card and user balance decrease.)
 - [ ] Write an API to return total balance and balance of each account (card).
+- [ ] Write an API to return top 3 users they had most transactions. (store all transactions in redis, and get the last transactions from there, then write a worker to clear cache, that are passed 10 minutes).
 - [ ] For all endpoints write custom request.
 
 
