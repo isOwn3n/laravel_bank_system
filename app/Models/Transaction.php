@@ -12,7 +12,9 @@ class Transaction extends Model
     protected $fillable = [
         'card_id',
         'amount',
-        'is_deposit'
+        'fee',
+        'is_deposit',
+        'status'
     ];
 
     public function user()

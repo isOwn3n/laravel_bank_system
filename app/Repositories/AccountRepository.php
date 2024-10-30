@@ -24,14 +24,11 @@ class AccountRepository implements AccountRepositoryInterface
      */
     public function update_balance(int $amount, int $card_number, int $user_id, bool $is_deposit = true): array
     {
-        /* $balance = 0; */
-        /* $account_id = 0; */
         $data = ['balance' => 0, 'id' => 0, 'status' => 200, 'message' => 'the balance changed successfuly.'];
         DB::transaction(function () use ($card_number, $amount, $is_deposit, &$data) {
             $account = $this->model->where('card_number', $card_number)->lockForUpdate()->first();
 
             if (!$account) {
-                $data['balance'] = $account->balance;
                 $data['status'] = 404;
                 $data['message'] = 'Invalid card number.';
                 return;
@@ -48,15 +45,43 @@ class AccountRepository implements AccountRepositoryInterface
             $is_deposit ? $account->balance += $amount : $account->balance -= $amount;
             $account->save();
 
-            $balance = $account->balance;
-            $account_id = $account->id;
+            $data['balance'] = $account->balance;
+            $data['id'] = $account->id;
         });
         return $data;
-        /* return [ */
-        /* 'message' => 'the balance changed successfuly.', */
-        /* 'id' => $account_id, */
-        /* 'status' => 200, */
-        /* 'balance' => $balance, */
-        /* ]; */
+    }
+
+    /**
+     * A function to get total transaction of day.
+     * @param int $card_number
+     * @return int
+     */
+    public function today_total_amount(int $card_number): int
+    {
+        $accout = $this->model->where('card_number', $card_number)->first();
+        if (!$accout)
+            return -1;
+
+        $total_amount = $accout
+            ->transactions()
+            ->whereDate('created_at', now()->toDateString())
+            ->sum('amount');
+
+        return (int) $total_amount;
+    }
+
+    /**
+     * This is a function check card total transactions in a day.
+     * @param int $card_number
+     * @param int $amount
+     * @return bool
+     */
+    public function is_account_able(int $card_number, int $amount): bool
+    {
+        $total_amount = $this->today_total_amount($card_number);
+
+        if ($total_amount + $amount > 50000000 || $total_amount == -1)
+            return false;
+        return true;
     }
 }

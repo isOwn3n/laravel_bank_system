@@ -22,6 +22,7 @@ class TransactionFactory extends Factory
             'card_id' => Account::factory(),
             'amount' => fake()->randomNumber(),
             'is_deposit' => fake()->boolean(2),
+            'fee' => 500,
             'status' => $statuses[array_rand($statuses)]
         ];
     }

@@ -16,35 +16,27 @@ class UserRepository
 
     public function update_balance(int $amount, int $user_id, bool $is_deposit): array
     {
-        $balance = 0;
-        DB::transaction(function () use ($balance, $user_id, $amount, $is_deposit) {
+        $data = ['balance' => 0, 'status' => 200, 'message' => 'the balance changed successfuly.'];
+        DB::transaction(function () use ($user_id, $amount, $is_deposit, &$data) {
             $user = $this->model->where('id', $user_id)->lockForUpdate()->first();
-            if (!$user)
-                return [
-                    'message' => 'Invalid User.',
-                    'status' => 404,
-                    'balance' => -1,
-                ];
+            if (!$user) {
+                $data['message'] = 'Invalid User.';
+                $data['status'] = 404;
+                return;
+            }
 
-            if ($user->balance < $amount)
-                return [
-                    'message' => 'There is no enough money.',
-                    'status' => 418,
-                    'balance' => $user->balance,
-                ];
+            if ($user->balance < $amount) {
+                $data['message'] = 'User dont have enough money.';
+                $data['status'] = 418;
+                $data['balance'] = $user->balance;
+                return;
+            }
 
-            if ($is_deposit)
-                $user->balance += $amount;
-            else
-                $user->balance -= $amount;
+            $is_deposit ? $user->balance += $amount : $user->balance -= $amount;
 
             $user->save();
-            $balance = $user->balance;
+            $data['balance'] = $user->balance;
         });
-        return [
-            'message' => 'the balance changed successfuly.',
-            'status' => 200,
-            'balance' => $balance,
-        ];
+        return $data;
     }
 }

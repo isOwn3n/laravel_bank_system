@@ -43,30 +43,29 @@ class TransactionRepository implements TransactionRepositoryInterface
      * @param int $amount
      * @return array
      */
-    public function getCash(int $user_id, int $card_number, int $amount): array
+    public function getCash(int $balance, int $account_id, int $amount, int $fee): array
     {
-        // TODO: Move logics to Service files. (here just get data and update it.)
-        $user = $this->userRepository->update_balance($amount, $user_id, false);
-        if ($user['status'] != 200)
-            return $user;
-
-        $account = $this->accountRepository->update_balance($amount, $card_number, $user_id, false);
-        if ($account['status'] != 200)
-            return $account;
-
-        $account_id = $account['id'];
-
-        DB::transaction(function () use ($amount, $account_id) {
+        DB::transaction(function () use ($amount, $account_id, $fee) {
             $transaction = $this->model->create([
                 'card_id' => $account_id,
                 'is_deposit' => false,
                 'amount' => $amount,
+                'fee' => $fee,
+                'status' => 'confirmed'
             ]);
         });
 
         return [
             'message' => 'You got cash successfully.',
-            'balance' => $account['balance'],
+            'balance' => $balance,
         ];
     }
+
+    // TODO: Change name of this function.
+    public function get_most_payed_users(int $user_id)
+    {
+        return;
+    }
+
+    /* public function */
 }

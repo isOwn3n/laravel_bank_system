@@ -32,6 +32,6 @@ class DatabaseSeeder extends Seeder
         Transaction::factory(1000)->create([
             'card_id' => fn() => Account::inRandomOrder()->first()->id,
         ]);
-        /* $this->call(UserBalanceSeeder::class); */
+        $this->call(UserBalanceSeeder::class);
     }
 }

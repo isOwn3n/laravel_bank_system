@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Foundation\Application;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,7 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->redirectGuestsTo(function (Request $request) {
+            return response()->json(
+                [
+                    'message' => 'Unauthorized',
+                ],
+                Response::HTTP_UNAUTHORIZED
+            );
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
@@ -23,4 +31,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 'message' => $e->getMessage(),
             ], Response::HTTP_TOO_MANY_REQUESTS);
         });
-    })->create();
+
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], Response::HTTP_UNAUTHORIZED);
+        });
+    })
+    ->create();

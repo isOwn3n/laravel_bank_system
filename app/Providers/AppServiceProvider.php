@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Interfaces\Repositories\AccountRepositoryInterface;
 use App\Interfaces\Repositories\TransactionRepositoryInterface;
+use App\Interfaces\Repositories\UserRepositoryInterface;
 use App\Models\Transaction;
 use App\Repositories\AccountRepository;
 use App\Repositories\TransactionRepository;
@@ -23,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(AccountRepository::class)
             );
         });
+        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(AccountRepositoryInterface::class, AccountRepository::class);
     }
 
     /**

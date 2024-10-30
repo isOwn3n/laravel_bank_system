@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Account extends Model
 {
     use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'user_id',
         'card_number',
@@ -22,6 +23,6 @@ class Account extends Model
 
     public function transactions()
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Transaction::class, 'card_id', 'id');
     }
 }

@@ -16,6 +16,7 @@ return new class extends Migration {
             // TODO: Check with this has any changes on speed of queries.
             $table->foreignId('user_id')->nullable()->constrained('users');
             $table->integer('amount', unsigned: true);
+            $table->integer('fee', unsigned: true);
             $table->boolean('is_deposit');
             $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending');
             $table->timestamps();
