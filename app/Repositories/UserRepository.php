@@ -14,10 +14,10 @@ class UserRepository
         $this->model = $model;
     }
 
-    public function update_balance(int $amount, int $user_id, bool $is_deposit): array
+    public function update_balance(int $amount, int $user_id, bool $is_deposit, int $fee = 0): array
     {
         $data = ['balance' => 0, 'status' => 200, 'message' => 'the balance changed successfuly.'];
-        DB::transaction(function () use ($user_id, $amount, $is_deposit, &$data) {
+        DB::transaction(function () use ($user_id, $amount, $is_deposit, $fee, &$data) {
             $user = $this->model->where('id', $user_id)->lockForUpdate()->first();
             if (!$user) {
                 $data['message'] = 'Invalid User.';
@@ -32,7 +32,7 @@ class UserRepository
                 return;
             }
 
-            $is_deposit ? $user->balance += $amount : $user->balance -= $amount;
+            $is_deposit ? $user->balance += $amount : $user->balance -= ($amount + $fee);
 
             $user->save();
             $data['balance'] = $user->balance;
