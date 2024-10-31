@@ -16,13 +16,10 @@ class CardNumberBelongsToUser implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        /* foreach ($value as $index => $item) { */
         $is_valid = Account::where('card_number', $value)
             ->where('user_id', Auth::user()->id)
             ->exists();
         if (!$is_valid)
             $fail('The selected card number is invalid.');
-
-        /* } */
     }
 }
