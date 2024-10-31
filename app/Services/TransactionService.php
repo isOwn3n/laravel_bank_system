@@ -89,7 +89,7 @@ class TransactionService
     }
 
     /**
-     * This is a function to get top 3 users with most amount of transactions in last 10 minutes.
+     * This is a function to filter top 3 users with most amount of transactions in last 10 minutes got from redis.
      * @param array $transactions
      * @return array
      */
@@ -120,7 +120,7 @@ class TransactionService
      * @param int $srcCardNumber
      * @param int $destCardNumber
      * @param int $amount
-     * @param int $fee=0
+     * @param int $fee The fee of transactions (default: 0)
      * @return bool
      */
     public function transfer(int $userId, int $srcCardNumber, int $destCardNumber, int $amount, int $fee = 0): bool

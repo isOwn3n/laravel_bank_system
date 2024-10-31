@@ -8,18 +8,12 @@ use Illuminate\Support\Facades\DB;
 
 class AccountRepository implements AccountRepositoryInterface
 {
-    protected Account $model;
-
-    public function __construct(Account $model)
-    {
-        $this->model = $model;
-    }
+    public function __construct(protected Account $model) {}
 
     /**
      * a function that returns an array it contains balance and a message.
      * @param int $amount
      * @param int $card_number
-     * @param int $user_id
      * @param bool $is_deposit
      * @param int $fee
      * @return array
@@ -101,6 +95,11 @@ class AccountRepository implements AccountRepositoryInterface
         return $this->model->where('card_number', $cardNumber)->first()->id;
     }
 
+    /**
+     * A function to get user id by card number.
+     * @param int $cardNumber
+     * @return int
+     */
     public function getUserId(int $cardNumber): int
     {
         return $this->model->where('card_number', $cardNumber)->first()->user_id;

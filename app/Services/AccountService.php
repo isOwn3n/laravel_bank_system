@@ -12,26 +12,18 @@ class AccountService
     ) {}
 
     /**
+     * A function to handle updating balance of user and it card.
      * @param int $amount
      * @param int $card_number
      * @param int $user_id
-     * @param bool $is_deposit
-     * @param int $fee
-     * @return ?array
+     * @param bool $is_deposit check user transaction type (default: true)
+     * @param int $fee transaction fee on withdraw (default: 0)
+     * @return array|null
      */
     public function update_balance(int $amount, int $card_number, int $user_id, bool $is_deposit = true, int $fee = 0): ?array
     {
         $this->userService->update_balance($amount, $user_id, $is_deposit, $fee);
         return $this->repository->update_balance($amount, $card_number, $is_deposit, $fee);
-    }
-
-    /**
-     * @param int $card_number
-     * @return int
-     */
-    public function get_total_transactions_of_day(int $card_number): int
-    {
-        return $this->repository->today_total_amount($card_number);
     }
 
     /**

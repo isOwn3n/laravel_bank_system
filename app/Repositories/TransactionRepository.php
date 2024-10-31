@@ -9,19 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class TransactionRepository implements TransactionRepositoryInterface
 {
-    protected Transaction $model;
-    protected UserRepository $userRepository;
-    protected AccountRepository $accountRepository;
-
     public function __construct(
-        Transaction $model,
-        UserRepository $userRepository,
-        AccountRepository $accountRepository,
-    ) {
-        $this->model = $model;
-        $this->userRepository = $userRepository;
-        $this->accountRepository = $accountRepository;
-    }
+        protected Transaction $model,
+        protected UserRepository $userRepository,
+        protected AccountRepository $accountRepository,
+    ) {}
 
     /**
      * A Select Query to get count of successful trasactions per hour
@@ -37,14 +29,18 @@ class TransactionRepository implements TransactionRepositoryInterface
     }
 
     /**
+     * Create function, it handled using database transaction.
      * @param int $account_id
      * @param int $user_id
-     * @param int $fee
-     * @param bool $is_deposit
+     * @param int $amount
+     * @param int $fee=0
+     * @param bool $is_deposit=true
      * @param string $status='pending'
+     * @param ?int $destCardId=NULL
+     * @return bool
      */
     public function create(int $account_id, int $user_id, int $amount, int $fee = 0, bool $is_deposit = true,
-        string $status = 'pending', ?int $destCardId = NULL)
+        string $status = 'pending', ?int $destCardId = NULL): bool
     {
         DB::beginTransaction();
 
@@ -97,8 +93,6 @@ class TransactionRepository implements TransactionRepositoryInterface
         ];
     }
 
-    // TOOD: Change name of this function.
-
     /**
      * This is a function that returns user info and they 10 last transactions.
      * @param array $ids
@@ -116,14 +110,27 @@ class TransactionRepository implements TransactionRepositoryInterface
                 ->take(10)
                 ->get();
 
-            $transactions_by_user[$user_id]['info'] = $transaction->first()->user;
+            $transactions_by_user[$user_id]['info'] = $transaction->first()->user()->first();
             $transactions_by_user[$user_id]['transactions'] = $transaction;
         }
 
         return $transactions_by_user;
     }
 
-    public function transfer(int $userId, int $srcCardId, int $destCardId, int $amount, int $fee = 0)
+    /**
+     * This is a function to transfer money between two cards.
+     * it creates two rows in transactions model.
+     * First for withdraw.
+     * Second for deposit.
+     * @param int $userId
+     * @param int $srcCardId
+     * @param int $destCardId
+     * @param int $amount
+     * @param int $fee=0
+     *
+     * @return bool
+     */
+    public function transfer(int $userId, int $srcCardId, int $destCardId, int $amount, int $fee = 0): bool
     {
         $withdrawal = $this->create($srcCardId, $userId, $amount, $fee, false, 'confirmed', $destCardId);
         $deposit = $this->create($destCardId, $userId, $amount, 0, true, 'confirmed');

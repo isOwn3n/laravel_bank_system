@@ -31,8 +31,13 @@ class TransactionController extends Controller
         $user_id = $request->user()->id;
         $card_number = $validated['card_number'];
         $amount = $validated['amount'];
+
         $result = $this->service->getCash($user_id, $card_number, $amount);
 
+        /*
+         * It write this transaction to redis with 10 minutes limit and midnight limit.
+         * The midnight limit means the that key will expire at 12 A.M.
+         */
         $this->writeInRedis($card_number, $user_id, $amount);
 
         return $result;
@@ -45,6 +50,8 @@ class TransactionController extends Controller
     public function getThreeLastUsers(): JsonResponse
     {
         $cacheTransactions = $this->readAllTransactionsFromRedis();
+
+        // Mistake on naming: getAllTransactions function parse data that stored in cache.
         $transactions = $this->service->getAllTransactions($cacheTransactions);
 
         $topUsers = $this->service->getThreeTopUsers($transactions);
@@ -66,9 +73,13 @@ class TransactionController extends Controller
         return response()->json($balances);
     }
 
+    /**
+     * This is a controller to transfer money between to cards.
+     * @param TransferRequest $request
+     * @return JsonResponse
+     */
     public function transfer(TransferRequest $request): JsonResponse
     {
-        // TODO: Clean this part of code.
         $validated = $request->validated();
 
         if ($validated['card_number'] === $validated['dest_card_number'])
@@ -97,23 +108,5 @@ class TransactionController extends Controller
             'fee' => $fee,
             'dest_card_number' => $destCardNumber
         ], Response::HTTP_OK);
-    }
-
-    /**
-     * A Temp controller to get count of transactions in last hour.
-     * @param Request $request
-     * @return JsonResponse
-     */
-
-    // TODO: Remove it and write a query (One with SQL and the other one with ORM)
-    public function get_count_per_hour(Request $request): JsonResponse
-    {
-        $transactions_count = $this->repository->successfulTrasactionsPerHourCount(1, 3198572955);
-        return response()->json(
-            [
-                'count' => $transactions_count,
-                'message' => 'Count of successful transactions at last hour',
-            ], Response::HTTP_OK
-        );
     }
 }

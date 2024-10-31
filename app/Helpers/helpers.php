@@ -57,12 +57,15 @@ if (!function_exists('setTransactionWithMidnightExpiry')) {
      */
     function setTransactionWithMidnightExpiry(int $cardNumber, int $userId, int $amount): string
     {
+        /* Get expire time from now to 12 A.M. */
         $now = Carbon::now();
         $midnight = Carbon::tomorrow()->startOfDay();
         $expire_at = (int) $now->diffInSeconds($midnight);
 
+        /* Generate A Key with an specific format. */
         $key = generateRedisKey($userId, $cardNumber, 'total_transaction', false);
 
+        /* Update total amount of users card. */
         $last_amount = json_decode(getFromRedis($key), true);
         if ($last_amount)
             $amount += $last_amount['amount'];
@@ -76,7 +79,7 @@ if (!function_exists('setTransactionWithMidnightExpiry')) {
 
 if (!function_exists('setEachTransactionWithTenMExpiry')) {
     /**
-     * A helper function to store transactions in redis.
+     * A helper function to store all transactions in redis.
      * @param int $userId
      * @param int $cardNumber
      * @param int $amount
@@ -92,7 +95,7 @@ if (!function_exists('setEachTransactionWithTenMExpiry')) {
 
 if (!function_exists('generateRedisKey')) {
     /**
-     * A helper function to generate string with an specific format for keys of redis.
+     * A helper function to generate string with an specific format and structure for keys of redis.
      * @param int $userId
      * @param int $cardNumber
      * @param string $prefix default value 'transaction'
@@ -117,9 +120,9 @@ if (!function_exists('isKeyValid')) {
     function isKeyValid(string $key): bool
     {
         $splittedKey = explode(':', $key);
-        if (in_array(count($splittedKey), [3, 4]))
-            return true;
-        return false;
+
+        /* Len of keys should be 3 or 4. (It depends on timestamp set or not.) */
+        return in_array(count($splittedKey), [3, 4]);
     }
 }
 
@@ -132,15 +135,15 @@ if (!function_exists('getTotalTransactionsOfUsersCard')) {
      */
     function getTotalTransactionsOfUsersCard(int $userId, int $cardNumber)
     {
+        /* Generate key to get total transactions, today. */
         $key = generateRedisKey($userId, $cardNumber, 'total_transaction', false);
-        $totalAmount = getFromRedis($key);
-        $jsonTotalAmount = json_decode($totalAmount, true)['amount'] ?? 0;
-        return $jsonTotalAmount ?? 0;
+        $totalAmount = getFromRedisAsJson($key)['amount'] ?? 0;
+        return $totalAmount;
     }
 }
 
 if (!function_exists('getFromRedisAsJson')) {
-    function getFromRedisAsJson(string $key): array
+    function getFromRedisAsJson(string $key): ?array
     {
         $data = getFromRedis($key);
         $data_json = json_decode($data, true);

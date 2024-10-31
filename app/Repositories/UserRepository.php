@@ -14,6 +14,15 @@ class UserRepository
         $this->model = $model;
     }
 
+    /*
+     * This is a function to update balance of user in database.
+     * @param int $amount
+     * @param int $user_id
+     * @param bool $is_deposit
+     * @param int $fee (Default: 0)
+     *
+     * @return array
+     */
     public function update_balance(int $amount, int $user_id, bool $is_deposit, int $fee = 0): array
     {
         $data = ['balance' => 0, 'status' => 200, 'message' => 'the balance changed successfuly.'];
@@ -43,8 +52,10 @@ class UserRepository
     /**
      * A function to get user an it accounts.
      * @param int $userId
+     *
+     * @return User|null
      */
-    public function getUserAndAccoutns(int $userId)
+    public function getUserAndAccoutns(int $userId): ?User
     {
         return $this->model->with('accounts')->where('id', $userId)->first();
     }
