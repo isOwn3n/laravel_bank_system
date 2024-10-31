@@ -19,7 +19,6 @@ class AccountFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            /* 'user_id' => User::all()->random()->id, */
             'card_number' => fake()->unique()->numberBetween(1000000000, 4294967295),
             'balance' => fake()->randomNumber(),
         ];
