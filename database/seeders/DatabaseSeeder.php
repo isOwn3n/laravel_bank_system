@@ -15,9 +15,21 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::factory()->create([
-            'name' => 'Example',
+            'name' => 'alireza',
             'phone_number' => '09123456789',
             'password' => 'password',
+        ]);
+        Account::factory()->create([
+            'user_id' => 1,
+            'card_number' => 3937919048
+        ]);
+        Account::factory()->create([
+            'user_id' => 1,
+            'card_number' => 4287669535
+        ]);
+        Account::factory()->create([
+            'user_id' => 1,
+            'card_number' => 1927823329
         ]);
 
         User::factory(300)->create();
@@ -25,23 +37,15 @@ class DatabaseSeeder extends Seeder
         $accounts = Account::factory(600)->create([
             'user_id' => fn() => User::inRandomOrder()->first()->id,
         ]);
-        // TODO: change type of creating transactions.
-        Transaction::factory(25000)->create([
-            'card_id' => fn() => $accounts->random()->id,
-            'user_id' => fn($attributes) => $accounts->firstWhere('id', $attributes['card_id'])->user_id,
-        ]);
-        Transaction::factory(25000)->create([
-            'card_id' => fn() => $accounts->random()->id,
-            'user_id' => fn($attributes) => $accounts->firstWhere('id', $attributes['card_id'])->user_id,
-        ]);
-        Transaction::factory(25000)->create([
-            'card_id' => fn() => $accounts->random()->id,
-            'user_id' => fn($attributes) => $accounts->firstWhere('id', $attributes['card_id'])->user_id,
-        ]);
-        Transaction::factory(25000)->create([
-            'card_id' => fn() => $accounts->random()->id,
-            'user_id' => fn($attributes) => $accounts->firstWhere('id', $attributes['card_id'])->user_id,
-        ]);
+
+        $totalRecords = 100000;
+        $chunkSize = 10000;
+        for ($i = 0; $i < $totalRecords; $i += $chunkSize) {
+            Transaction::factory($chunkSize)->create([
+                'card_id' => fn() => $accounts->random()->id,
+                'user_id' => fn($attributes) => $accounts->firstWhere('id', $attributes['card_id'])->user_id,
+            ]);
+        }
 
         $this->call(UserBalanceSeeder::class);
     }
