@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\IsValidTransaction;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 Response::HTTP_UNAUTHORIZED
             );
         });
+        $middleware->alias(['is-transaction-limit-reached' => IsValidTransaction::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
