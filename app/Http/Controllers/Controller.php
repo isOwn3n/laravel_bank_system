@@ -2,32 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Redis;
-
 abstract class Controller
 {
-    public function read_from_redis_by_user_id(int $user_id)
+    public function readFromRedisByUserId(int $userId): array
     {
-        $keys = Redis::keys("*transaction:{$user_id}:*");
-        return $keys;
+        return keysInRedis("transaction:{$userId}");
     }
 
-    public function read_all_from_redis()
+    public function readAllTransactionsFromRedis(): array
     {
-        $keys = Redis::keys('*transaction:*');
-        return $keys;
+        return keysInRedis('transaction');
     }
 
-    public function write_in_redis(int $card_number, int $user_id, int $amount): void
+    public function writeInRedis(int $cardNumber, int $userId, int $amount): void
     {
-        $current_time = time();
-        Redis::setex("transaction:{$user_id}:{$card_number}:{$current_time}", 600, json_encode([
-            'amount' => $amount
-        ]));
-    }
-
-    public function get_from_redis(string $key)
-    {
-        return Redis::get($key);
+        setEachTransactionWithTenMExpiry($userId, $cardNumber, $amount);
+        setTransactionWithMidnightExpiry($cardNumber, $userId, $amount);
     }
 }
