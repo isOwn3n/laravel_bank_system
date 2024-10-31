@@ -19,7 +19,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cash', [TransactionController::class, 'cash']);
         Route::post('/transfer', [TransactionController::class, 'transfer']);
     });
-    Route::get('/redis', [TransactionController::class, 'testRedis']);
     Route::get('/balance', [TransactionController::class, 'getBalance']);
-    Route::get('/last', [TransactionController::class, 'getThreeLastUsers']);
+    Route::get('/top-users', [TransactionController::class, 'getThreeLastUsers']);
 });
