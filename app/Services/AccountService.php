@@ -7,7 +7,8 @@ use App\Repositories\AccountRepository;
 class AccountService
 {
     public function __construct(
-        public AccountRepository $repository,
+        protected AccountRepository $repository,
+        protected UserService $userService,
     ) {}
 
     /**
@@ -20,8 +21,8 @@ class AccountService
      */
     public function update_balance(int $amount, int $card_number, int $user_id, bool $is_deposit = true, int $fee = 0): ?array
     {
-        if ($this->repository->is_account_able($card_number, $amount))
-            return $this->repository->update_balance($amount, $card_number, $user_id, $is_deposit, $fee);
+        $this->userService->update_balance($amount, $user_id, $is_deposit, $fee);
+        return $this->repository->update_balance($amount, $card_number, $is_deposit, $fee);
     }
 
     /**
@@ -31,5 +32,25 @@ class AccountService
     public function get_total_transactions_of_day(int $card_number): int
     {
         return $this->repository->today_total_amount($card_number);
+    }
+
+    /**
+     * This is a simple function to get account id by card number.
+     * @param int $cardNumber
+     * @return int
+     */
+    public function getAccountId(int $cardNumber): int
+    {
+        return $this->repository->getAccountId($cardNumber);
+    }
+
+    /**
+     * This is a simple function to get user id by card number.
+     * @param int $cardNumber
+     * @return int
+     */
+    public function getUserIdByAccount(int $cardNumber): int
+    {
+        return $this->repository->getUserId($cardNumber);
     }
 }
