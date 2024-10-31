@@ -4,9 +4,11 @@ namespace App\Http\Controllers\API\v1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CashRequest;
+use App\Http\Requests\TransferRequest;
 use App\Services\TransactionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class TransactionController extends Controller
 {
@@ -17,9 +19,9 @@ class TransactionController extends Controller
         $this->service = $service;
     }
 
-    public function testRedis()
+    public function testRedis(): JsonResponse
     {
-        return response()->json($this->read_all_from_redis());
+        return response()->json($this->readAllTransactionsFromRedis());
     }
 
     /**
@@ -32,45 +34,78 @@ class TransactionController extends Controller
         $validated = $request->validated();
 
         $user_id = $request->user()->id;
-        $result = $this->service->getCash($user_id, $validated['card_number'], $validated['amount']);
+        $card_number = $validated['card_number'];
+        $amount = $validated['amount'];
+        $result = $this->service->getCash($user_id, $card_number, $amount);
 
-        $this->write_in_redis($validated['card_number'], $user_id, $validated['amount']);
+        $this->writeInRedis($card_number, $user_id, $amount);
 
         return $result;
     }
 
     /**
+     * A controller to get 3 users they had most amount of transactions in last 10 minutes.
      * @return JsonResponse
      */
-    public function get_three_last_users(): JsonResponse
+    public function getThreeLastUsers(): JsonResponse
     {
-        $cache_transaction = $this->read_all_from_redis();
-        $transactions = [];
-        foreach ($cache_transaction as $transaction) {
-            // TODO: Clean this code.
-            $redisKey = str_replace('laravel_database_', '', $transaction);
-            $transaction_data = $this->get_from_redis($redisKey);
-            $amount = json_decode($transaction_data, true)['amount'] ?? 0;
-            $user_id = explode(':', $redisKey)[1];
+        $cacheTransactions = $this->readAllTransactionsFromRedis();
+        $transactions = $this->service->getAllTransactions($cacheTransactions);
 
-            if (!isset($transactions[$user_id])) {
-                $transactions[$user_id] = [];
-            }
-            $transactions[$user_id][] = $amount;
-        }
-        $totalAmounts = [];
-        foreach ($transactions as $userId => $amounts) {
-            $totalAmounts[$userId] = array_sum($amounts);
-        }
-        arsort($totalAmounts);
-        $top3Users = array_slice($totalAmounts, 0, 3, true);
+        $topUsers = $this->service->getThreeTopUsers($transactions);
 
-        $transactions_result = $this->service->reposotiry->get_last_ten_rows($top3Users);
-        return response()->json($transactions_result);
+        $tenLastTransactionsOfUsers = $this->service->getTopUsers($topUsers);
+
+        return response()->json($tenLastTransactionsOfUsers);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * A controller to get balance for user and it cards.
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getBalance(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $balances = $this->service->getBalance($userId);
+        return response()->json($balances);
+    }
+
+    public function transfer(TransferRequest $request): JsonResponse
+    {
+        // TODO: Clean this part of code.
+        $validated = $request->validated();
+
+        if ($validated['card_number'] === $validated['dest_card_number'])
+            return response()->json([
+                'message' => 'The destination card number must be different from the source card number.',
+            ], Response::HTTP_FORBIDDEN);
+
+        $userId = $request->user()->id;
+        $fee = (int) env('FEE', 500);
+        $srcCardNumber = $validated['card_number'];
+        $amount = $validated['amount'];
+        $destCardNumber = $validated['dest_card_number'];
+
+        $this->service->transfer(
+            $userId,
+            $srcCardNumber,
+            $destCardNumber,
+            $amount,
+            $fee,
+        );
+        $this->writeInRedis($srcCardNumber, $userId, $amount);
+
+        return response()->json([
+            'message' => 'Transfer was successful.',
+            'amount' => $amount,
+            'fee' => $fee,
+            'dest_card_number' => $destCardNumber
+        ], Response::HTTP_OK);
+    }
+
+    /**
+     * A Temp controller to get count of transactions in last hour.
      * @param Request $request
      * @return JsonResponse
      */
@@ -80,7 +115,10 @@ class TransactionController extends Controller
     {
         $transactions_count = $this->repository->successfulTrasactionsPerHourCount(1, 3198572955);
         return response()->json(
-            ['count' => $transactions_count, 'message' => 'Count of successful transactions at last hour'],
+            [
+                'count' => $transactions_count,
+                'message' => 'Count of successful transactions at last hour',
+            ], Response::HTTP_OK
         );
     }
 }
