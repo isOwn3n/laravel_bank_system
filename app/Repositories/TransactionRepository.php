@@ -132,4 +132,40 @@ class TransactionRepository implements TransactionRepositoryInterface
             return false;
         return true;
     }
+
+    // DATABASE TASK.
+    public function countOfTransactionsInLastHour()
+    {
+        $count = $this
+            ->model
+            ->where('created_at', '>=', Carbon::now()->subHour())
+            ->count();
+        return $count;
+    }
+
+    public function amountOfTransactionsInLastMonthPerUser()
+    {
+        $user_id = 1;
+        $totalAmount = $this
+            ->model
+            ->where('created_at', '>=', Carbon::now()->subMonth())
+            ->where('user_id', $user_id)
+            ->sum('amount');
+        return $totalAmount;
+    }
+
+    public function amountOfTransactionsInLastMonthPerUsersCard()
+    {
+        $userId = 1;
+        $userTotalAmount = Transaction::where('created_at', '>=', Carbon::now()->subMonth())
+            ->where('user_id', $userId)
+            ->sum('amount');
+        $cardsTotalAmounts = Transaction::where('created_at', '>=', Carbon::now()->subMonth())
+            ->where('user_id', $userId)
+            ->groupBy('card_id')
+            ->select('card_id')
+            ->selectRaw('SUM(amount) AS total_amount')
+            ->get();
+        return ['user' => $userTotalAmount, 'cards' => $cardsTotalAmounts];
+    }
 }

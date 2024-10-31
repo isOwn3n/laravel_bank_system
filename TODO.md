@@ -14,3 +14,7 @@
 
 -   [ ] Customize README File.
 -   [ ] Make all variable and function names camel case.
+
+-   [x] Write A Query to get confirmed transactions of last hour. (SQL & ORM)
+-   [x] Write a Query to get total amount of transactions of each users in a month. (SQL & ORM)
+-   [x] Write a Query to get total amount of transactions of each users card in a month. (SQL & ORM)
