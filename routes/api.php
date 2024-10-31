@@ -14,15 +14,12 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 });
-
-/*Route::group([
-    'prefix' => ''
-], function () {
-     Route::get('/', [TransactionController::class, 'index']);
-     Route::get('/per-hour', [TransactionController::class, 'get_count_per_hour']);
-    }); */
-/* ->middleware('throttle:api') */
-
-Route::post('/cash', [TransactionController::class, 'cash'])->middleware('auth:sanctum');
-Route::get('/redis', [TransactionController::class, 'testRedis'])->middleware('auth:sanctum');
-Route::get('/last', [TransactionController::class, 'get_three_last_users'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['throttle:api', 'is-transaction-limit-reached'])->group(function () {
+        Route::post('/cash', [TransactionController::class, 'cash']);
+        Route::post('/transfer', [TransactionController::class, 'transfer']);
+    });
+    Route::get('/redis', [TransactionController::class, 'testRedis']);
+    Route::get('/balance', [TransactionController::class, 'getBalance']);
+    Route::get('/last', [TransactionController::class, 'getThreeLastUsers']);
+});
