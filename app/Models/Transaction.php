@@ -11,6 +11,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'card_id',
+        'dest_card_id',
         'user_id',
         'amount',
         'fee',
@@ -26,5 +27,10 @@ class Transaction extends Model
     public function card()
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function destCard()
+    {
+        return $$this->belongsTo(Account::class);
     }
 }
