@@ -19,11 +19,6 @@ class TransactionController extends Controller
         $this->service = $service;
     }
 
-    public function testRedis(): JsonResponse
-    {
-        return response()->json($this->readAllTransactionsFromRedis());
-    }
-
     /**
      * A controller to get cash (API).
      * @param CashRequest $request A Custom Request Class.

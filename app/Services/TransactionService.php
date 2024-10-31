@@ -2,16 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Transaction;
 use App\Repositories\TransactionRepository;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-
-/*
- * Get The Current Total Amount of Each Card (Account) And set it in redis, at the end of day, remove it. (Using Worker.)
- * - What Happens If The Server Goes Down?
- * - All Data Will Lost.
- */
 
 class TransactionService
 {
