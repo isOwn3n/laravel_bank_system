@@ -37,22 +37,58 @@ class TransactionRepository implements TransactionRepositoryInterface
     }
 
     /**
-     * This is a function to get Cash.
+     * @param int $account_id
      * @param int $user_id
-     * @param int $card_number
-     * @param int $amount
-     * @return array
+     * @param int $fee
+     * @param bool $is_deposit
+     * @param string $status='pending'
      */
-    public function getCash(int $balance, int $account_id, int $amount, int $fee): array
+    public function create(int $account_id, int $user_id, int $amount, int $fee = 0, bool $is_deposit = true,
+        string $status = 'pending', ?int $destCardId = NULL)
     {
-        DB::transaction(function () use ($amount, $account_id, $fee) {
+        DB::beginTransaction();
+
+        try {
             $transaction = $this->model->create([
                 'card_id' => $account_id,
-                'is_deposit' => false,
+                'dest_card_id' => $destCardId,
+                'user_id' => $user_id,
+                'is_deposit' => $is_deposit,
                 'amount' => $amount,
                 'fee' => $fee,
-                'status' => 'confirmed'
+                'status' => $status
             ]);
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->model->create([
+                'card_id' => $account_id,
+                'dest_card_id' => $destCardId,
+                'user_id' => $user_id,
+                'is_deposit' => $is_deposit,
+                'amount' => $amount,
+                'fee' => $fee,
+                'status' => 'pending'
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * This is a function to get Cash.
+     * @param int $balance
+     * @param int $account_id
+     * @param int $user_id
+     * @param int $amount
+     * @param int $fee
+     * @return array
+     */
+    public function getCash(int $balance, int $account_id, int $user_id, int $amount, int $fee): array
+    {
+        DB::transaction(function () use ($amount, $account_id, $fee, $user_id) {
+            $this->create($account_id, $user_id, $amount, $fee, false, 'confirmed');
         });
 
         return [
@@ -85,5 +121,15 @@ class TransactionRepository implements TransactionRepositoryInterface
         }
 
         return $transactions_by_user;
+    }
+
+    public function transfer(int $userId, int $srcCardId, int $destCardId, int $amount, int $fee = 0)
+    {
+        $withdrawal = $this->create($srcCardId, $userId, $amount, $fee, false, 'confirmed', $destCardId);
+        $deposit = $this->create($destCardId, $userId, $amount, 0, true, 'confirmed');
+
+        if (!($withdrawal && $deposit))
+            return false;
+        return true;
     }
 }

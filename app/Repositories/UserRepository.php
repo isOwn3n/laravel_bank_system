@@ -39,4 +39,13 @@ class UserRepository
         });
         return $data;
     }
+
+    /**
+     * A function to get user an it accounts.
+     * @param int $userId
+     */
+    public function getUserAndAccoutns(int $userId)
+    {
+        return $this->model->with('accounts')->where('id', $userId)->first();
+    }
 }

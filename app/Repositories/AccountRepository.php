@@ -24,7 +24,7 @@ class AccountRepository implements AccountRepositoryInterface
      * @param int $fee
      * @return array
      */
-    public function update_balance(int $amount, int $card_number, int $user_id, bool $is_deposit = true, int $fee = 0): array
+    public function update_balance(int $amount, int $card_number, bool $is_deposit = true, int $fee = 0): array
     {
         $data = ['balance' => 0, 'id' => 0, 'status' => 200, 'message' => 'the balance changed successfuly.', 'fee' => $fee];
         DB::transaction(function () use ($card_number, $amount, $is_deposit, $fee, &$data) {
@@ -40,7 +40,7 @@ class AccountRepository implements AccountRepositoryInterface
             if (!$is_deposit)
                 $final_amount += $fee;
 
-            if ($account->balance < $final_amount) {
+            if ($account->balance < $final_amount && !$is_deposit) {
                 $data['balance'] = $account->balance;
                 $data['status'] = 418;
                 $data['message'] = 'There is no enough money.';
@@ -89,5 +89,20 @@ class AccountRepository implements AccountRepositoryInterface
         if ($total_amount + $amount > 50000000 || $total_amount == -1)
             return false;
         return true;
+    }
+
+    /**
+     * A function to get account id by card number.
+     * @param int $cardNumber
+     * @return int
+     */
+    public function getAccountId(int $cardNumber): int
+    {
+        return $this->model->where('card_number', $cardNumber)->first()->id;
+    }
+
+    public function getUserId(int $cardNumber): int
+    {
+        return $this->model->where('card_number', $cardNumber)->first()->user_id;
     }
 }
