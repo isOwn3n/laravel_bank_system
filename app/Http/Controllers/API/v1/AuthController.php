@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
@@ -36,13 +36,9 @@ class AuthController extends Controller
 
         $user = User::where('phone_number', $request->phone_number)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'phone_number' => ['The provided credentials are incorrect.'],
-            ]);
-        }
+        if (!$user || !Hash::check($request->password, $user->password))
+            return response()->json(['phone_number' => ['The provided credentials are incorrect.']], Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        // Create a new personal access token for the user
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json(['access_token' => $token, 'token_type' => 'Bearer'], 200);
