@@ -25,7 +25,7 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'phone_number' => fake()->phoneNumber(),
+            'phone_number' => fake()->unique()->numerify('0' . fake()->randomElement(['910', '911', '912']) . '#######'),
             'balance' => fake()->numberBetween(10000, 1000000000000),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
