@@ -12,6 +12,8 @@
 -   [x] Write an API to transfer money between two accounts.
 -   [x] For all endpoints write custom request.
 
+-   [x] Write a trigger in database to update user balance by it accounts.
+
 -   [ ] Customize README File.
 -   [ ] Make all variable and function names camel case.
 
