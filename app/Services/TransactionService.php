@@ -27,27 +27,11 @@ class TransactionService
         $fee = env('FEE', 500);
 
         $account = $this->accountService->update_balance($amount, $cardNumber, false, $fee);
-        switch ($account['status']) {
-            case 404:
-                return response()->json([
-                    'message' => $account['message'],
-                ], $account['status']);
-                break;
-            case 403:
-                return response()->json([
-                    'message' => $account['message'],
-                ], $account['status']);
-                break;
-            case 418:
-                return response()->json([
-                    'message' => $account['message'],
-                    'balance' => $account['balance'],
-                ], $account['status']);
-                break;
-
-            default:
-                break;
-        }
+        if ($account['status'] == 418)
+            return response()->json([
+                'message' => $account['message'],
+                'balance' => $account['balance'],
+            ], $account['status']);
 
         $accountId = $account['id'];
         $result = $this->repository->getCash($account['balance'], $account['id'], $userId, $amount, $fee);
@@ -127,14 +111,15 @@ class TransactionService
     {
         $srcCardId = $this->accountService->getAccountId($srcCardNumber);
         $destCardId = $this->accountService->getAccountId($destCardNumber);
-        $transferResult = $this->repository->transfer($userId, $srcCardId, $destCardId, $amount, $fee);
-        if ($transferResult) {
-            $srcAccount = $this->accountService->update_balance($amount, $srcCardNumber, false, $fee);
 
-            $destUserId = $this->accountService->getUserIdByAccount($destCardNumber);
-            $destAccount = $this->accountService->update_balance($amount, $destCardNumber);
-            return true;
-        }
-        return false;
+        $transferResult = $this->repository->transfer($userId, $srcCardId, $destCardId, $amount, $fee);
+        if (!$transferResult)
+            return false;
+
+        $srcAccount = $this->accountService->update_balance($amount, $srcCardNumber, false, $fee);
+
+        $destUserId = $this->accountService->getUserIdByAccount($destCardNumber);
+        $destAccount = $this->accountService->update_balance($amount, $destCardNumber);
+        return true;
     }
 }
