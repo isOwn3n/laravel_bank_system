@@ -11,4 +11,6 @@ interface AccountRepositoryInterface
     public function getAccountId(int $cardNumber): int;
 
     public function getUserId(int $cardNumber): int;
+
+    public function hasBalance(int $cardId, int $amount): bool;
 }

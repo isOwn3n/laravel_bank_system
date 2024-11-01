@@ -132,6 +132,9 @@ class TransactionRepository implements TransactionRepositoryInterface
      */
     public function transfer(int $userId, int $srcCardId, int $destCardId, int $amount, int $fee = 0): bool
     {
+        $hasBalance = $this->accountRepository->hasBalance($srcCardId, $amount);
+        if (!$hasBalance)
+            return false;
         $withdrawal = $this->create($srcCardId, $userId, $amount, $fee, false, 'confirmed', $destCardId);
         $deposit = $this->create($destCardId, $userId, $amount, 0, true, 'confirmed');
 

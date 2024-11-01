@@ -34,7 +34,7 @@ class AccountRepository implements AccountRepositoryInterface
             if (!$is_deposit)
                 $final_amount += $fee;
 
-            if ($account->balance < $final_amount && !$is_deposit) {
+            if (($account->balance < $final_amount) && !$is_deposit) {
                 $data['balance'] = $account->balance;
                 $data['status'] = 418;
                 $data['message'] = 'There is no enough money.';
@@ -81,6 +81,15 @@ class AccountRepository implements AccountRepositoryInterface
         $total_amount = $this->today_total_amount($card_number);
 
         if ($total_amount + $amount > 50000000 || $total_amount == -1)
+            return false;
+        return true;
+    }
+
+    public function hasBalance(int $cardId, int $amount): bool
+    {
+        $account = $this->model->where('id', $cardId)->first();
+        $hasBalance = $account->balance - $amount;
+        if ($hasBalance < 0)
             return false;
         return true;
     }

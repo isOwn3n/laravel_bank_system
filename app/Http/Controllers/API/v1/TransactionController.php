@@ -93,13 +93,22 @@ class TransactionController extends Controller
         $amount = $validated['amount'];
         $destCardNumber = $validated['dest_card_number'];
 
-        $this->service->transfer(
+        $transferResult = $this->service->transfer(
             $userId,
             $srcCardNumber,
             $destCardNumber,
             $amount,
             $fee,
         );
+
+        if (!$transferResult)
+            return response()->json([
+                'message' => 'Transfer failed, Account balance is not enough.',
+                'amount' => $amount,
+                'fee' => $fee,
+                'dest_card_number' => $destCardNumber
+            ], Response::HTTP_I_AM_A_TEAPOT);
+
         $this->writeInRedis($srcCardNumber, $userId, $amount);
 
         return response()->json([
