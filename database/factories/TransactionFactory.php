@@ -24,6 +24,7 @@ class TransactionFactory extends Factory
             'user_id' => User::factory(),
             'amount' => fake()->randomNumber(),
             'is_deposit' => fake()->boolean(2),
+            // TODO: If deposit was true, fee should  be 0
             'fee' => 500,
             'status' => $statuses[array_rand($statuses)]
         ];

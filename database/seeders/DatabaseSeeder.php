@@ -41,6 +41,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        // Suggestion: Use this function, its faster.
         // Or uncomment blow line to run alternative of above function in raw sql.
         /* $this->call(TransactionRawSeeder::class); */
 

@@ -9,6 +9,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        // NOTE: because if wanted to use laravel model on update event, the data was upto dated.
         DB::unprepared(<<<SQL
             CREATE OR REPLACE FUNCTION update_user_balance_after_account_update()
             RETURNS TRIGGER AS \$\$
