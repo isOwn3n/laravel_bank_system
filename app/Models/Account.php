@@ -25,4 +25,9 @@ class Account extends Model
     {
         return $this->hasMany(Transaction::class, 'card_id', 'id');
     }
+
+    public function withdrawTransactions()
+    {
+        return $this->hasMany(Transaction::class, 'dest_card_id', 'id');
+    }
 }

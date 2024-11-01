@@ -29,6 +29,7 @@ class Transaction extends Model
         return $this->belongsTo(Account::class);
     }
 
+    // To get the destination card in transfer.
     public function destCard()
     {
         return $$this->belongsTo(Account::class);
