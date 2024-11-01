@@ -11,12 +11,14 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::middleware(['throttle:transaction', 'is-transaction-limit-reached'])->group(function () {
-        Route::post('/cash', [TransactionController::class, 'cash']);
-        Route::post('/transfer', [TransactionController::class, 'transfer']);
+    Route::prefix('transaction')->group(function () {
+        Route::middleware(['throttle:transaction', 'is-transaction-limit-reached'])->group(function () {
+            Route::post('/cash', [TransactionController::class, 'cash']);
+            Route::post('/transfer', [TransactionController::class, 'transfer']);
+        });
+        Route::get('/balance', [TransactionController::class, 'getBalance']);
+        Route::get('/top-users', [TransactionController::class, 'getThreeLastUsers']);
     });
-    Route::get('/balance', [TransactionController::class, 'getBalance']);
-    Route::get('/top-users', [TransactionController::class, 'getThreeLastUsers']);
 
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', function (Request $request) {
