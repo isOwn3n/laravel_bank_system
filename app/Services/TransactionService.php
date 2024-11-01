@@ -75,7 +75,7 @@ class TransactionService
         foreach ($cacheTransactions as $transaction) {
             $redisKey = str_replace('laravel_database_', '', $transaction);
 
-            $transactionData = getFromRedisAsJson($redisKey);
+            $transactionData = getFromCacheAsJson($redisKey);
 
             $amount = $transactionData['amount'] ?? 0;
             $userId = explode(':', $redisKey)[1];

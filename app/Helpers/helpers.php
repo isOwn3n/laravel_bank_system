@@ -1,35 +1,24 @@
 <?php
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 
-if (!function_exists('getFromRedis')) {
-    /**
-     * A helper function to get value of a specific key in redis.
-     * @param string $key
-     * @return ?string
-     */
-    function getFromRedis(string $key): ?string
+if (!function_exists('getFromCache')) {
+    function getFromCache(string $key)
     {
-        return Redis::get($key);
+        return Cache::get($key);
     }
 }
 
-if (!function_exists('setExToRedis')) {
-    /**
-     * A helper function to set a data in redis with an expire time.
-     * @param string $key
-     * @param string $value
-     * @param int $expireAt
-     * @return void
-     */
-    function setExToRedis(string $key, string $value, int $expireAt): void
+if (!function_exists('setToCache')) {
+    function setToCache(string $key, string $value, int $expireAtSeconds)
     {
-        Redis::setex($key, $expireAt, $value);
+        Cache::put($key, $value, (int) ($expireAtSeconds));
     }
 }
 
-if (!function_exists('keysInRedis')) {
+if (!function_exists('keysInCache')) {
     /*
      * You can give the user id in this key for example:
      * "transaction:{$userId}"
@@ -37,17 +26,18 @@ if (!function_exists('keysInRedis')) {
      */
 
     /**
-     * A helper function to get all keys with an specific prefix in redis.
+     * A helper function to get all keys with an specific prefix in cache.
      * @param string $keyPrefix
      * @return array
      */
-    function keysInRedis(string $keyPrefix): array
+    function keysInCache(string $keyPrefix): array
     {
-        return Redis::keys($keyPrefix . ':*');
+        // I Have to use redis. Cache dont have any function to this action.
+        return Redis::connection('cache')->keys('*');
     }
 }
 
-if (!function_exists('setTransactionWithMidnightExpiry')) {
+if (!function_exists('setTransactionWithMidnightExpiryCache')) {
     /**
      * A helper function to store a value in redis to validate total amount of transaction of each user on each of their cards.
      * @param int $cardNumber
@@ -55,7 +45,7 @@ if (!function_exists('setTransactionWithMidnightExpiry')) {
      * @param int $amount
      * @return string
      */
-    function setTransactionWithMidnightExpiry(int $cardNumber, int $userId, int $amount): string
+    function setTransactionWithMidnightExpiryCache(int $cardNumber, int $userId, int $amount): string
     {
         /* Get expire time from now to 12 A.M. */
         $now = Carbon::now();
@@ -63,21 +53,21 @@ if (!function_exists('setTransactionWithMidnightExpiry')) {
         $expire_at = (int) $now->diffInSeconds($midnight);
 
         /* Generate A Key with an specific format. */
-        $key = generateRedisKey($userId, $cardNumber, 'total_transaction', false);
+        $key = generateKey($userId, $cardNumber, 'total_transaction', false);
 
         /* Update total amount of users card. */
-        $last_amount = json_decode(getFromRedis($key), true);
+        $last_amount = json_decode(getFromCache($key), true);
         if ($last_amount)
             $amount += $last_amount['amount'];
 
         $value = json_encode(['amount' => $amount]);
 
-        setExToRedis($key, $value, $expire_at);
+        setToCache($key, $value, $expire_at);
         return $key;
     }
 }
 
-if (!function_exists('setEachTransactionWithTenMExpiry')) {
+if (!function_exists('setEachTransactionWithTenMExpiryCache')) {
     /**
      * A helper function to store all transactions in redis.
      * @param int $userId
@@ -85,15 +75,15 @@ if (!function_exists('setEachTransactionWithTenMExpiry')) {
      * @param int $amount
      * @return void
      */
-    function setEachTransactionWithTenMExpiry(int $userId, int $cardNumber, int $amount): void
+    function setEachTransactionWithTenMExpiryCache(int $userId, int $cardNumber, int $amount): void
     {
-        $key = generateRedisKey($userId, $cardNumber);
+        $key = generateKey($userId, $cardNumber);
         $value = json_encode(['amount' => $amount]);
-        setExToRedis($key, $value, 600);
+        setToCache($key, $value, 600);
     }
 }
 
-if (!function_exists('generateRedisKey')) {
+if (!function_exists('generateKey')) {
     /**
      * A helper function to generate string with an specific format and structure for keys of redis.
      * @param int $userId
@@ -102,7 +92,7 @@ if (!function_exists('generateRedisKey')) {
      * @param bool $hasTimeStamp default value true
      * return string
      */
-    function generateRedisKey(int $userId, int $cardNumber, string $prefix = 'transaction', bool $hasTimeStamp = true): string
+    function generateKey(int $userId, int $cardNumber, string $prefix = 'transaction', bool $hasTimeStamp = true): string
     {
         $key = "{$prefix}:{$userId}:{$cardNumber}";
         if ($hasTimeStamp)
@@ -136,16 +126,16 @@ if (!function_exists('getTotalTransactionsOfUsersCard')) {
     function getTotalTransactionsOfUsersCard(int $userId, int $cardNumber)
     {
         /* Generate key to get total transactions, today. */
-        $key = generateRedisKey($userId, $cardNumber, 'total_transaction', false);
-        $totalAmount = getFromRedisAsJson($key)['amount'] ?? 0;
+        $key = generateKey($userId, $cardNumber, 'total_transaction', false);
+        $totalAmount = getFromCacheAsJson($key)['amount'] ?? 0;
         return $totalAmount;
     }
 }
 
-if (!function_exists('getFromRedisAsJson')) {
-    function getFromRedisAsJson(string $key): ?array
+if (!function_exists('getFromCacheAsJson')) {
+    function getFromCacheAsJson(string $key): ?array
     {
-        $data = getFromRedis($key);
+        $data = getFromCache($key);
         $data_json = json_decode($data, true);
         return $data_json;
     }

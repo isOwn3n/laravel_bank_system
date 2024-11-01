@@ -4,19 +4,19 @@ namespace App\Http\Controllers;
 
 abstract class Controller
 {
-    public function readFromRedisByUserId(int $userId): array
+    public function readFromCacheByUserId(int $userId): array
     {
-        return keysInRedis("transaction:{$userId}");
+        return keysInCache("transaction:{$userId}");
     }
 
-    public function readAllTransactionsFromRedis(): array
+    public function readAllTransactionsFromCache(): array
     {
-        return keysInRedis('transaction');
+        return keysInCache('transaction');
     }
 
-    public function writeInRedis(int $cardNumber, int $userId, int $amount): void
+    public function writeInCache(int $cardNumber, int $userId, int $amount): void
     {
-        setEachTransactionWithTenMExpiry($userId, $cardNumber, $amount);
-        setTransactionWithMidnightExpiry($cardNumber, $userId, $amount);
+        setEachTransactionWithTenMExpiryCache($userId, $cardNumber, $amount);
+        setTransactionWithMidnightExpiryCache($cardNumber, $userId, $amount);
     }
 }

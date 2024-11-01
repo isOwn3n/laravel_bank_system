@@ -38,7 +38,7 @@ class TransactionController extends Controller
          * It write this transaction to redis with 10 minutes limit and midnight limit.
          * The midnight limit means the that key will expire at 12 A.M.
          */
-        $this->writeInRedis($card_number, $user_id, $amount);
+        $this->writeInCache($card_number, $user_id, $amount);
 
         return $result;
     }
@@ -49,7 +49,7 @@ class TransactionController extends Controller
      */
     public function getThreeLastUsers(): JsonResponse
     {
-        $cacheTransactions = $this->readAllTransactionsFromRedis();
+        $cacheTransactions = $this->readAllTransactionsFromCache();
 
         // Mistake on naming: getAllTransactions function parse data that stored in cache.
         $transactions = $this->service->getAllTransactions($cacheTransactions);
@@ -109,7 +109,7 @@ class TransactionController extends Controller
                 'dest_card_number' => $destCardNumber
             ], Response::HTTP_I_AM_A_TEAPOT);
 
-        $this->writeInRedis($srcCardNumber, $userId, $amount);
+        $this->writeInCache($srcCardNumber, $userId, $amount);
 
         return response()->json([
             'message' => 'Transfer was successful.',
