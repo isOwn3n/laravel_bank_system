@@ -129,10 +129,10 @@ class TransactionService
         $destCardId = $this->accountService->getAccountId($destCardNumber);
         $transferResult = $this->repository->transfer($userId, $srcCardId, $destCardId, $amount, $fee);
         if ($transferResult) {
-            $srcAccount = $this->accountService->update_balance($amount, $srcCardNumber, $userId, false, $fee);
+            $srcAccount = $this->accountService->update_balance($amount, $srcCardNumber, false, $fee);
 
             $destUserId = $this->accountService->getUserIdByAccount($destCardNumber);
-            $destAccount = $this->accountService->update_balance($amount, $destCardNumber, $destUserId);
+            $destAccount = $this->accountService->update_balance($amount, $destCardNumber);
             return true;
         }
         return false;

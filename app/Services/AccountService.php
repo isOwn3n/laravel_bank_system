@@ -20,9 +20,8 @@ class AccountService
      * @param int $fee transaction fee on withdraw (default: 0)
      * @return array|null
      */
-    public function update_balance(int $amount, int $card_number, int $user_id, bool $is_deposit = true, int $fee = 0): ?array
+    public function update_balance(int $amount, int $card_number, bool $is_deposit = true, int $fee = 0): ?array
     {
-        $this->userService->update_balance($amount, $user_id, $is_deposit, $fee);
         return $this->repository->update_balance($amount, $card_number, $is_deposit, $fee);
     }
 

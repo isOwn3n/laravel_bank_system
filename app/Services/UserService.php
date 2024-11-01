@@ -14,18 +14,6 @@ class UserService
     ) {}
 
     /**
-     * This is a function to call update_balance function from user repository.
-     * @param int $amount
-     * @param int $user_id
-     * @param bool $is_deposit
-     * @param int $fee The fee of transactions (default: 0)
-     */
-    public function update_balance(int $amount, int $user_id, bool $is_deposit, int $fee = 0): array
-    {
-        return $this->repository->update_balance($amount, $user_id, $is_deposit, $fee);
-    }
-
-    /**
      * A function to get balance of user and it cards.
      * @param int $userId
      *
