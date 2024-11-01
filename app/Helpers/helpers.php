@@ -14,7 +14,7 @@ if (!function_exists('getFromCache')) {
 if (!function_exists('setToCache')) {
     function setToCache(string $key, string $value, int $expireAtSeconds)
     {
-        Cache::put($key, $value, (int) ($expireAtSeconds));
+        Cache::put($key, $value, $expireAtSeconds);
     }
 }
 
@@ -56,7 +56,12 @@ if (!function_exists('setTransactionWithMidnightExpiryCache')) {
         $key = generateKey($userId, $cardNumber, 'total_transaction', false);
 
         /* Update total amount of users card. */
-        $last_amount = json_decode(getFromCache($key), true);
+        $data = getFromCache($key);
+        if (!$data)
+            $last_amount = 0;
+        else
+            $last_amount = json_decode($data, true) ?? 0;
+
         if ($last_amount)
             $amount += $last_amount['amount'];
 
@@ -136,6 +141,8 @@ if (!function_exists('getFromCacheAsJson')) {
     function getFromCacheAsJson(string $key): ?array
     {
         $data = getFromCache($key);
+        if (!$data)
+            return [];
         $data_json = json_decode($data, true);
         return $data_json;
     }
