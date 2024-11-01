@@ -34,55 +34,21 @@ class AccountRepository implements AccountRepositoryInterface
             if (!$is_deposit)
                 $final_amount += $fee;
 
-            if (($account->balance < $final_amount) && !$is_deposit) {
+            if (!$this->hasBalance($account->id, $final_amount) && !$is_deposit) {
                 $data['balance'] = $account->balance;
                 $data['status'] = 418;
                 $data['message'] = 'There is no enough money.';
                 return;
             }
 
-            $account_id = $account->id;
+            /* TODO: Write an update function. */
             $is_deposit ? $account->balance += $amount : $account->balance -= $final_amount;
             $account->save();
 
             $data['balance'] = $account->balance;
-            $data['id'] = $account_id;
+            $data['id'] = $account->id;
         });
         return $data;
-    }
-
-    /**
-     * A function to get total transaction of day.
-     * @param int $card_number
-     * @return int
-     */
-    public function today_total_amount(int $card_number): int
-    {
-        $accout = $this->model->where('card_number', $card_number)->first();
-        if (!$accout)
-            return -1;
-
-        $total_amount = $accout
-            ->transactions()
-            ->whereDate('created_at', now()->toDateString())
-            ->sum('amount');
-
-        return (int) $total_amount;
-    }
-
-    /**
-     * This is a function check card total transactions in a day.
-     * @param int $card_number
-     * @param int $amount
-     * @return bool
-     */
-    public function is_account_able(int $card_number, int $amount): bool
-    {
-        $total_amount = $this->today_total_amount($card_number);
-
-        if ($total_amount + $amount > 50000000 || $total_amount == -1)
-            return false;
-        return true;
     }
 
     public function hasBalance(int $cardId, int $amount): bool
