@@ -24,12 +24,6 @@ class AccountRepository implements AccountRepositoryInterface
         DB::transaction(function () use ($card_number, $amount, $is_deposit, $fee, &$data) {
             $account = $this->model->where('card_number', $card_number)->lockForUpdate()->first();
 
-            if (!$account) {
-                $data['status'] = 404;
-                $data['message'] = 'Invalid card number.';
-                return;
-            }
-
             $final_amount = $amount;
             if (!$is_deposit)
                 $final_amount += $fee;

@@ -16,19 +16,6 @@ class TransactionRepository implements TransactionRepositoryInterface
     ) {}
 
     /**
-     * A Select Query to get count of successful trasactions per hour
-     * @param int $user_id
-     * @param int $card_number
-     * @return int
-     */
-    public function successfulTrasactionsPerHourCount(int $user_id, int $card_number): int
-    {
-        $oneHourAgo = Carbon::now()->subHour();
-        $transactions = $this->model->where('updated_at', '>=', $oneHourAgo)->where('status', 'confirmed')->get();
-        return $transactions->count();
-    }
-
-    /**
      * Create function, it handled using database transaction.
      * @param int $account_id
      * @param int $user_id
@@ -54,10 +41,13 @@ class TransactionRepository implements TransactionRepositoryInterface
                 'fee' => $fee,
                 'status' => $status
             ]);
+
             DB::commit();
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
+
             $this->model->create([
                 'card_id' => $account_id,
                 'dest_card_id' => $destCardId,
@@ -65,7 +55,7 @@ class TransactionRepository implements TransactionRepositoryInterface
                 'is_deposit' => $is_deposit,
                 'amount' => $amount,
                 'fee' => $fee,
-                'status' => 'pending'
+                'status' => 'cancelled'
             ]);
 
             return false;
@@ -83,9 +73,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      */
     public function getCash(int $balance, int $account_id, int $user_id, int $amount, int $fee): array
     {
-        DB::transaction(function () use ($amount, $account_id, $fee, $user_id) {
-            $this->create($account_id, $user_id, $amount, $fee, false, 'confirmed');
-        });
+        $this->create($account_id, $user_id, $amount, $fee, false, 'confirmed');
 
         return [
             'message' => 'You got cash successfully.',
@@ -144,7 +132,7 @@ class TransactionRepository implements TransactionRepositoryInterface
     }
 
     // DATABASE TASK.
-    public function countOfTransactionsInLastHour()
+    public function countOfTransactionsInLastHour(): int
     {
         $count = $this
             ->model
@@ -153,7 +141,7 @@ class TransactionRepository implements TransactionRepositoryInterface
         return $count;
     }
 
-    public function amountOfTransactionsInLastMonthPerUser()
+    public function amountOfTransactionsInLastMonthPerUser(): int
     {
         $user_id = 1;
         $totalAmount = $this
@@ -164,7 +152,7 @@ class TransactionRepository implements TransactionRepositoryInterface
         return $totalAmount;
     }
 
-    public function amountOfTransactionsInLastMonthPerUsersCard()
+    public function amountOfTransactionsInLastMonthPerUsersCard(): array
     {
         $userId = 1;
         $userTotalAmount = Transaction::where('created_at', '>=', Carbon::now()->subMonth())
